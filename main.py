@@ -214,7 +214,12 @@ async def vapi_tool(request: Request):
     try:
         body = await request.json()
 
-        user_input = body.get("message", "")
+        
+     user_input = (
+         body.get("message")
+         or body.get("input")
+         or ""
+            )
 
         # VAPI payload 안에서 call id 찾기
         call_id = None
@@ -237,6 +242,7 @@ async def vapi_tool(request: Request):
         print("user_input:", user_input)
         print("saved_state:", saved_state)
         print("new_state:", new_state)
+        print("FULL BODY:", body)
 
         return JSONResponse({
             "message": response_message
