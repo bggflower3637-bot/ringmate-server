@@ -1,17 +1,16 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
-app = FastAPI()
-
-@app.get("/")
-def root():
-    return {"status": "ok"}
+class Request(BaseModel):
+    message: str
 
 @app.post("/vapi-tool")
-async def vapi_tool():
-    return JSONResponse(
-        content={
-            "message": "안녕하세요. 테스트 성공입니다."
-        },
-        media_type="application/json; charset=utf-8"
-    )
+async def vapi_tool(req: Request):
+    
+    user_input = req.message
+
+    # 🔥 여기서 필터링 시작
+    processed = f"받은 메시지: {user_input}"
+
+    return {
+        "message": processed
+    }
