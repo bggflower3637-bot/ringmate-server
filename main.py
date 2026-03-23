@@ -14,9 +14,10 @@ def health():
     return {"status": "healthy"}
 
 
-@app.post("/vapi-tool")
+@app.api_route("/vapi-tool", methods=["GET", "POST"])
 async def vapi_tool(request: Request):
     try:
+        # JSON 안전 파싱 (절대 안 죽게)
         try:
             body = await request.json()
         except Exception:
