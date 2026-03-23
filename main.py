@@ -14,18 +14,37 @@ def health():
     return {"status": "healthy"}
 
 
-@app.api_route("/vapi-tool", methods=["GET", "POST"])
+@app.api_route(
+    "/vapi-tool",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+)
+@app.api_route(
+    "/vapi-tool/",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+)
 async def vapi_tool(request: Request):
     try:
-        # JSON 안전 파싱 (절대 안 죽게)
+        method = request.method
+        headers = dict(request.headers)
+
+        body = {}
+        raw_text = ""
+
         try:
             body = await request.json()
         except Exception:
-            body = {}
+            try:
+                raw_text = (await request.body()).decode("utf-8", errors="ignore")
+            except Exception:
+                raw_text = ""
 
-        print("FULL BODY:", body)
+        print("METHOD:", method)
+        print("HEADERS:", headers)
+        print("BODY_JSON:", body)
+        print("BODY_TEXT:", raw_text)
 
         user_input = ""
+
         if isinstance(body, dict):
             if isinstance(body.get("message"), str):
                 user_input = body.get("message", "")
@@ -34,15 +53,21 @@ async def vapi_tool(request: Request):
             elif isinstance(body.get("user_input"), str):
                 user_input = body.get("user_input", "")
 
+        if not user_input and raw_text:
+            user_input = raw_text.strip()
+
         if not user_input:
             user_input = "No user message received."
 
         return JSONResponse(
             status_code=200,
             content={
+                "ok": True,
+                "method": method,
                 "message": f"You said: {user_input}",
-                "received": body
-            }
+                "received_json": body,
+                "received_text": raw_text,
+            },
         )
 
     except Exception as e:
@@ -50,7 +75,8 @@ async def vapi_tool(request: Request):
         return JSONResponse(
             status_code=200,
             content={
+                "ok": False,
                 "message": "Server handled an error.",
-                "error": str(e)
-            }
+                "error": str(e),
+            },
         )
