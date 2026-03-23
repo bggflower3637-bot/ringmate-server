@@ -5,29 +5,45 @@ app = FastAPI()
 
 
 @app.get("/")
-async def root():
+def root():
     return {"status": "ok"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
 
 
 @app.post("/vapi-tool")
 async def vapi_tool(request: Request):
     try:
-        body = {}
         try:
             body = await request.json()
-        except:
+        except Exception:
             body = {}
 
         user_input = ""
         if isinstance(body, dict):
-            user_input = body.get("message", "")
+            if isinstance(body.get("message"), str):
+                user_input = body.get("message", "")
+            elif isinstance(body.get("input"), str):
+                user_input = body.get("input", "")
+            elif isinstance(body.get("user_input"), str):
+                user_input = body.get("user_input", "")
 
-        return JSONResponse({
-            "message": f"echo: {user_input}"
-        })
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": f"echo: {user_input or 'no input received'}",
+                "received": body
+            }
+        )
 
     except Exception as e:
-        return JSONResponse({
-            "message": "error",
-            "error": str(e)
-        })
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "handler error",
+                "error": str(e)
+            }
+        )
